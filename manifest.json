@@ -1,0 +1,26 @@
+{
+  "manifest_version": 3,
+  "name": "Better JOBCAN",
+  "version": "1.0.0",
+  "description": "Enhanced attendance tracking helper for JOBCAN - shows overwork time, remaining hours, and monthly quota progress",
+  "permissions": [
+    "activeTab"
+  ],
+  "host_permissions": [
+    "https://ssl.jobcan.jp/*"
+  ],
+  "content_scripts": [
+    {
+      "matches": ["https://ssl.jobcan.jp/employee/attendance*"],
+      "js": ["content.js"],
+      "css": ["styles.css"],
+      "run_at": "document_idle"
+    }
+  ],
+  "icons": {
+    "16": "icon16.png",
+    "48": "icon48.png",
+    "128": "icon128.png"
+  }
+}
+
