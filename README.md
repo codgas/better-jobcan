@@ -2,6 +2,8 @@
 
 An enhanced browser extension for JOBCAN attendance tracking that displays useful work metrics including overwork time, remaining hours for the day, start time, working days remaining, and monthly quota progress.
 
+> **⚠️ Status**: This project is still under development. Features may change and bugs may exist.
+
 > **Note**: This project is inspired by [jobkan-helper](https://github.com/exoego/jobkan-helper) by exoego.
 
 ## Features
