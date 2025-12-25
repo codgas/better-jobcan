@@ -212,34 +212,16 @@ export function calculateMetrics(
   const startTimeToday = todayRow?.clockIn || null;
 
   // Calculate hours remaining today
-  // This calculates how many hours are still needed to complete 8 hours of work today
-  // Use "Working Hours" from the table if available (accounts for breaks), otherwise calculate from clock times
+  // This calculates time remaining until you can leave (clock-in + 9 hours including lunch)
   let hoursRemainingToday = 0;
   if (todayRow) {
-    // Standard work day is 8 hours (480 minutes)
+    // Standard work day is 8 hours (480 minutes) + 1 hour lunch = 9 hours total at office
     const standardWorkDayMinutes = 8 * 60;
+    const lunchBreakMinutes = 60;
+    const totalTimeNeeded = standardWorkDayMinutes + lunchBreakMinutes; // 9 hours
 
-    // First, try to use "Working Hours" from the table (this accounts for breaks)
-    if (todayRow.workingHours) {
-      const workedMinutes = parseTimeToMinutes(todayRow.workingHours);
-
-      // Calculate remaining time to complete 8 hours
-      if (workedMinutes < standardWorkDayMinutes) {
-        hoursRemainingToday = standardWorkDayMinutes - workedMinutes;
-      } else {
-        // Already worked 8+ hours
-        hoursRemainingToday = 0;
-      }
-
-      console.log('Better JOBCAN: Hours remaining today calculation (using Working Hours):', {
-        workingHours: todayRow.workingHours,
-        workedMinutes: formatMinutesToTime(workedMinutes),
-        standardWorkDay: formatMinutesToTime(standardWorkDayMinutes),
-        hoursRemaining: formatMinutesToTime(hoursRemainingToday)
-      });
-    }
-    // If no working hours yet, calculate from clock-in/clock-out times
-    else if (todayRow.clockIn) {
+    // Always use clock-in time to calculate "time until you can leave"
+    if (todayRow.clockIn) {
       const clockIn = parseTimeToMinutes(todayRow.clockIn);
       const clockOut = todayRow.clockOut && todayRow.clockOut !== '(Available)' && todayRow.clockOut.trim() !== ''
         ? parseTimeToMinutes(todayRow.clockOut)
@@ -249,28 +231,29 @@ export function calculateMetrics(
         // Current time: if clocked out, use that; otherwise use current time
         const currentTime = clockOut !== null ? clockOut : getCurrentTimeMinutes();
 
-        // Calculate how long they've worked today (raw time, without breaks)
-        const workedMinutes = currentTime - clockIn;
+        // Calculate how long they've been at work today (elapsed time)
+        const elapsedMinutes = currentTime - clockIn;
 
-        // Calculate remaining time to complete 8 hours
-        if (workedMinutes < standardWorkDayMinutes) {
-          hoursRemainingToday = standardWorkDayMinutes - workedMinutes;
+        // Calculate remaining time until they can leave (9 hours total - elapsed)
+        if (elapsedMinutes < totalTimeNeeded) {
+          hoursRemainingToday = totalTimeNeeded - elapsedMinutes;
         } else {
-          // Already worked 8+ hours
+          // Already at work for 9+ hours
           hoursRemainingToday = 0;
         }
 
-        console.log('Better JOBCAN: Hours remaining today calculation (using clock times):', {
+        console.log('Better JOBCAN: Hours remaining today calculation:', {
           clockIn: todayRow.clockIn,
           clockOut: todayRow.clockOut,
           currentTime: formatMinutesToTime(currentTime),
-          workedMinutes: formatMinutesToTime(workedMinutes),
-          standardWorkDay: formatMinutesToTime(standardWorkDayMinutes),
+          elapsedMinutes: formatMinutesToTime(elapsedMinutes),
+          totalTimeNeeded: formatMinutesToTime(totalTimeNeeded),
+          lunchBreak: formatMinutesToTime(lunchBreakMinutes),
           hoursRemaining: formatMinutesToTime(hoursRemainingToday)
         });
       }
     } else {
-      console.log('Better JOBCAN: No clock-in time or working hours found for today');
+      console.log('Better JOBCAN: No clock-in time found for today');
     }
   } else {
     console.log('Better JOBCAN: No today row found');
